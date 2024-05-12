@@ -1,3 +1,48 @@
+<?php
+// Connection
+include('database_connection.php');
+
+// Insert data if form is submitted
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Prepare and bind the parameters
+    $stmt = $conn->prepare("INSERT INTO option_contract (Underlying_asset, Strick_price, Expiry_date, Option_type,Premium) VALUES ( ?, ?, ?, ?, ?)");
+
+    // Check if the statement was prepared successfully
+    if ($stmt === false) {
+        die("Error in preparing statement: " . $conn->error);
+    }
+
+    // Bind parameters
+    $stmt->bind_param("sssss", $assets, $sprice, $edate, $otype, $premium);
+
+    // Set parameters and execute
+    $assets = $_POST['underlying_asset'];
+    $sprice = $_POST['strike_price'];
+    $edate = $_POST['expiry_date'];
+    $otype = $_POST['option_type'];
+    $premium = $_POST['premium'];
+    
+
+    if ($stmt->execute()) {
+        header("Location: option_contract.php");
+        echo "New record has been added successfully";
+    } else {
+        echo "Error: " . $stmt->error;
+    }
+   
+}
+
+$sql_select = "SELECT * FROM option_contract";
+if (isset($_GET['search'])) {
+    $search = $_GET['search'];
+    // Add search condition to SQL query
+    $sql_select .= " WHERE Underlying_asset	 LIKE '%$search%' OR Strick_price LIKE '%$search%' OR Expiry_date LIKE '%$search%' 
+    OR Option_type LIKE '%$search%' OR Premium LIKE '%$search%'";
+}
+
+$result = $conn->query($sql_select);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,43 +192,65 @@ sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossor
             </div>
         </div>
 
-        <div class="container">
-        <h2>Contracts</h2>
-        <form action="optioncontract_read_insert.php" method="post">
-    <label for="underlying_asset">Underlying Asset:</label>
-    <input type="text" id="underlying_asset" name="underlying_asset" required>
-
-    <label for="strike_price">Strike Price:</label>
-    <input type="number" id="strike_price" name="strike_price" step="0.01" required>
-
-    <label for="expiry_date">Expiry Date:</label>
-    <input type="date" id="expiry_date" name="expiry_date" required>
-
-    <label for="option_type">Option Type:</label>
-    <select id="option_type" name="option_type" required>
-        <option value="Call">Call</option>
-        <option value="Put">Put</option>
-    </select><br><br>
-
-    <label for="premium">Premium:</label>
-    <input type="number" id="premium" name="premium" step="0.01" required>
-
-    <input type="submit" value="Submit">
+        <h2>Option Contract</h2>
+    <div class="container">
+        <?php
+        if(isset($_GET['msg'])){
+            $msg = $_GET['msg'];
+            echo '<div class="alert alert-warning alert-dismissible fade show" role="alert">' . $msg . '
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>';
+        }
+        ?>
+       
 </form>
 
+        <a href="option_contract.php" class="btn btn-success">Add New</a>
+    </div><br>
+    <form method="GET" action="">
+    <input type="text" name="search" placeholder="Search...">
+    <button type="submit" class="btn btn-primary">Search</button><br>
+    <table id="dataTable" class="table table-hover text-center">
+        <tr>
+            <th>Contract id</th>
+            <th>Underlying asset</th>
+            <th>Strick price</th>
+            <th>Expiry date</th>
+            <th>Option type</th>
+            <th>Premium</th>
+            <th>Actions</th>
+        </tr>
+        <?php
+        
 
 
-
-</div>
-    </div>
-    
-    
-    
-    <script>
-        function confirmInsert() {
-        return confirm('Are you sure you want to insert this record?');
+        // Output data of each row
+        if ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                echo "<tr>";
+                echo "<td>" . $row["Contract_id"] . "</td>";
+                echo "<td>" . $row["Underlying_asset"] . "</td>";
+                echo "<td>" . $row["Strick_price"] . "</td>";
+                echo "<td>" . $row["Expiry_date"] . "</td>";
+                echo "<td>" . $row["Option_type"] . "</td>";
+                echo "<td>" . $row["Premium"] . "</td>";
+                echo "<td>";
+                echo "<a href='contractupdate.php?updateContract_id =" . $row['Contract_id'] . "'>Update</a> | ";
+                echo "<a href='contractdelete.php?Contract_id =" . $row['Contract_id'] . "'>Delete</a>";
+                 echo "</td>";
+                echo "</tr>";
+            }
+        } else {
+            echo "<tr><td colspan='7'>No data found</td></tr>";
         }
-        </script>
+        ?>
+    </table>
+
 </body>
 
 </html>
+
+<?php
+// Close connection at the end of the file
+$conn->close();
+?>

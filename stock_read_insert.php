@@ -1,3 +1,47 @@
+<?php
+// Connection
+include('database_connection.php');
+
+// Insert data if form is submitted
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Prepare and bind the parameters
+    $stmt = $conn->prepare("INSERT INTO stock (Stock_name, Sector, Market_carp, Dividend_yield, Price_earning_ration) VALUES (?, ?, ?, ?, ?)");
+
+    // Check if the statement was prepared successfully
+    if ($stmt === false) {
+        die("Error in preparing statement: " . $conn->error);
+    }
+
+    // Bind parameters
+    $stmt->bind_param("sssss", $sname, $sector, $markert, $dividend, $earning);
+
+    // Set parameters and execute
+    $sname = $_POST['stock_name'];
+    $sector = $_POST['sector'];
+    $markert = $_POST['market_cap'];
+    $dividend = $_POST['dividend_yield'];
+    $earning = $_POST['price_earnings_ratio'];
+    
+    if ($stmt->execute()) {
+        header("Location: stock.php");
+        echo "New record has been added successfully";
+    } else {
+        echo "Error: " . $stmt->error;
+    }
+   
+}
+
+//Selecting data from the database
+$sql_select = "SELECT * FROM stock";
+if (isset($_GET['search'])) {
+    $search = $_GET['search'];
+    // Add search condition to SQL query
+    $sql_select .= " WHERE Stock_name LIKE '%$search%' OR Sector LIKE '%$search%' OR Market_carp LIKE '%$search%' 
+    OR Dividend_yield LIKE '%$search%' OR Price_earning_ration LIKE '%$search%'";
+}
+$result = $conn->query($sql_select);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,43 +191,66 @@ sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossor
             </div>
         </div>
 
-        <div class="container">
-        <h2>Contracts</h2>
-        <form action="optioncontract_read_insert.php" method="post">
-    <label for="underlying_asset">Underlying Asset:</label>
-    <input type="text" id="underlying_asset" name="underlying_asset" required>
-
-    <label for="strike_price">Strike Price:</label>
-    <input type="number" id="strike_price" name="strike_price" step="0.01" required>
-
-    <label for="expiry_date">Expiry Date:</label>
-    <input type="date" id="expiry_date" name="expiry_date" required>
-
-    <label for="option_type">Option Type:</label>
-    <select id="option_type" name="option_type" required>
-        <option value="Call">Call</option>
-        <option value="Put">Put</option>
-    </select><br><br>
-
-    <label for="premium">Premium:</label>
-    <input type="number" id="premium" name="premium" step="0.01" required>
-
-    <input type="submit" value="Submit">
+        <h2>Stock Records</h2>
+    <div class="container">
+        <?php
+        if(isset($_GET['msg'])){
+            $msg = $_GET['msg'];
+            echo '<div class="alert alert-warning alert-dismissible fade show" role="alert">' . $msg . '
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>';
+        }
+        ?>
+       
 </form>
 
+        <a href="stock.php" class="btn btn-success">Add New</a>
+    </div><br>
+    <form method="GET" action="">
+    <input type="text" name="search" placeholder="Search...">
+    <button type="submit" class="btn btn-primary">Search</button><br>
+    <table id="dataTable" class="table table-hover text-center">
+        <tr>
+            <th>Stock id </th>
+            <th>Stock name</th>
+            <th>Sector</th>
+            <th>Market carp</th>
+            <th>Dividend yield</th>
+            <th>Price earning ration</th>
+            <th>Actions</th>
+        </tr>
+        <?php
+        
 
 
-
-</div>
-    </div>
-    
-    
-    
-    <script>
-        function confirmInsert() {
-        return confirm('Are you sure you want to insert this record?');
+        // Output data of each row
+        if ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                echo "<tr>";
+                echo "<td>" . $row["Stock_id"] . "</td>";
+                echo "<td>" . $row["Stock_name"] . "</td>";
+                echo "<td>" . $row["Sector"] . "</td>";
+                echo "<td>" . $row["Market_carp"] . "</td>";
+                echo "<td>" . $row["Dividend_yield"] . "</td>";
+                echo "<td>" . $row["Price_earning_ration"] . "</td>";
+                echo "<td>";
+                echo "<a href='stockupdate.php?updateStock_id =" . $row['Stock_id'] . "'>Update</a> | ";
+                echo "<a href='stockdelete.php?Stock_id =" . $row['Stock_id'] . "'>Delete</a>";
+                 echo "</td>";
+                echo "</tr>";
+            }
+        } else {
+            echo "<tr><td colspan='7'>No data found</td></tr>";
         }
-        </script>
+        ?>
+    </table>
+
 </body>
 
 </html>
+
+<?php
+// Close connection at the end of the file
+$conn->close();
+?>
+

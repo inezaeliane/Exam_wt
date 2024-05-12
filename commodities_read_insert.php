@@ -1,3 +1,48 @@
+<?php
+// Connection
+include('database_connection.php');
+
+// Insert data if form is submitted
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Prepare and bind the parameters
+    $stmt = $conn->prepare("INSERT INTO commodities (Commodity_name, Price, Supply_demand_dynamics	, Future_contracts) VALUES (  ?, ?, ?, ?)");
+
+    // Check if the statement was prepared successfully
+    if ($stmt === false) {
+        die("Error in preparing statement: " . $conn->error);
+    }
+
+    // Bind parameters
+    $stmt->bind_param("ssss", $cname, $price, $demands, $fcontracts);
+
+    // Set parameters and execute
+    $cname = $_POST['commodity_name'];
+    $price = $_POST['price'];
+    $demands = $_POST['supply_demand_dynamics'];
+    $fcontracts= $_POST['future_contracts'];
+   
+    
+
+    if ($stmt->execute()) {
+        header("Location: commodities.php");
+        echo "New record has been added successfully";
+    } else {
+        echo "Error: " . $stmt->error;
+    }
+   
+}
+
+$sql_select = "SELECT * FROM commodities";
+if (isset($_GET['search'])) {
+    $search = $_GET['search'];
+    // Add search condition to SQL query
+    $sql_select .= " WHERE Commodity_name LIKE '%$search%' OR 	Price LIKE '%$search%' OR Supply_demand_dynamics LIKE '%$search%' 
+    OR Future_contracts LIKE '%$search%' ";
+}
+
+$result = $conn->query($sql_select);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,43 +192,63 @@ sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossor
             </div>
         </div>
 
-        <div class="container">
-        <h2>Contracts</h2>
-        <form action="optioncontract_read_insert.php" method="post">
-    <label for="underlying_asset">Underlying Asset:</label>
-    <input type="text" id="underlying_asset" name="underlying_asset" required>
-
-    <label for="strike_price">Strike Price:</label>
-    <input type="number" id="strike_price" name="strike_price" step="0.01" required>
-
-    <label for="expiry_date">Expiry Date:</label>
-    <input type="date" id="expiry_date" name="expiry_date" required>
-
-    <label for="option_type">Option Type:</label>
-    <select id="option_type" name="option_type" required>
-        <option value="Call">Call</option>
-        <option value="Put">Put</option>
-    </select><br><br>
-
-    <label for="premium">Premium:</label>
-    <input type="number" id="premium" name="premium" step="0.01" required>
-
-    <input type="submit" value="Submit">
+        <h2>Commodities Records</h2>
+    <div class="container">
+        <?php
+        if(isset($_GET['msg'])){
+            $msg = $_GET['msg'];
+            echo '<div class="alert alert-warning alert-dismissible fade show" role="alert">' . $msg . '
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>';
+        }
+        ?>
+       
 </form>
 
+        <a href="commodities.php" class="btn btn-success">Add New</a>
+    </div><br>
+    <form method="GET" action="">
+    <input type="text" name="search" placeholder="Search...">
+    <button type="submit" class="btn btn-primary">Search</button><br>
+    <table id="dataTable" class="table table-hover text-center">
+        <tr>
+            <th>Commodity ID</th>
+            <th>Commodity Name</th>
+            <th>Price</th>
+            <th>Supply Demand Dynamics</th>
+            <th>Future Contract</th>
+            <th>Actions</th>
+        </tr>
+        <?php
+        
 
 
-
-</div>
-    </div>
-    
-    
-    
-    <script>
-        function confirmInsert() {
-        return confirm('Are you sure you want to insert this record?');
+        // Output data of each row
+        if ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                echo "<tr>";
+                echo "<td>" . $row["Commodities_id"] . "</td>";
+                echo "<td>" . $row["Commodity_name"] . "</td>";
+                echo "<td>" . $row["Price"] . "</td>";
+                echo "<td>" . $row["Supply_demand_dynamics"] . "</td>";
+                echo "<td>" . $row["Future_contracts"] . "</td>";
+                echo "<td>";
+                echo "<a href='Commodityupdate.php?updateCommodities_id=" . $row['Commodities_id'] . "'>Update</a> | ";
+                echo "<a href='Commoditydelete.php?Commodities_id=" . $row['Commodities_id'] . "'>Delete</a>";
+                 echo "</td>";
+                echo "</tr>";
+            }
+        } else {
+            echo "<tr><td colspan='6'>No data found</td></tr>";
         }
-        </script>
+        ?>
+    </table>
+
 </body>
 
 </html>
+
+<?php
+// Close connection at the end of the file
+$conn->close();
+?>

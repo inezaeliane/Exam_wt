@@ -1,3 +1,48 @@
+<?php
+// Connection
+include('database_connection.php');
+
+// Insert data if form is submitted
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Prepare and bind the parameters
+    $stmt = $conn->prepare("INSERT INTO mutual_funds (Fund_name, Fund_manager, Expenses_ratio, Nav, Holdings) VALUES ( ?, ?, ?, ?, ?)");
+
+    // Check if the statement was prepared successfully
+    if ($stmt === false) {
+        die("Error in preparing statement: " . $conn->error);
+    }
+
+    // Bind parameters
+    $stmt->bind_param("sssss", $fname, $fmanager, $expenses, $nav, $holding);
+
+    // Set parameters and execute
+    $fname = $_POST['fund_name'];
+    $fmanager = $_POST['fund_manager'];
+    $expenses = $_POST['expense_ratio'];
+    $nav = $_POST['nav'];
+    $holding = $_POST['holdings'];
+   
+    
+    if ($stmt->execute()) {
+        header("Location: mutual_funds.php");
+        echo "New record has been added successfully";
+    } else {
+        echo "Error: " . $stmt->error;
+    }
+   
+}
+
+$sql_select = "SELECT * FROM mutual_funds";
+if (isset($_GET['search'])) {
+    $search = $_GET['search'];
+    // Add search condition to SQL query
+    $sql_select .= " WHERE Fund_name LIKE '%$search%' OR Fund_manager LIKE '%$search%' OR Expenses_ratio	 LIKE '%$search%' 
+    OR 	Nav LIKE '%$search%' OR 	Holdings LIKE '%$search%'";
+}
+
+$result = $conn->query($sql_select);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,43 +192,66 @@ sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossor
             </div>
         </div>
 
-        <div class="container">
-        <h2>Contracts</h2>
-        <form action="optioncontract_read_insert.php" method="post">
-    <label for="underlying_asset">Underlying Asset:</label>
-    <input type="text" id="underlying_asset" name="underlying_asset" required>
-
-    <label for="strike_price">Strike Price:</label>
-    <input type="number" id="strike_price" name="strike_price" step="0.01" required>
-
-    <label for="expiry_date">Expiry Date:</label>
-    <input type="date" id="expiry_date" name="expiry_date" required>
-
-    <label for="option_type">Option Type:</label>
-    <select id="option_type" name="option_type" required>
-        <option value="Call">Call</option>
-        <option value="Put">Put</option>
-    </select><br><br>
-
-    <label for="premium">Premium:</label>
-    <input type="number" id="premium" name="premium" step="0.01" required>
-
-    <input type="submit" value="Submit">
+        <h2>Mutual Funds  Records</h2>
+    <div class="container">
+        <?php
+        if(isset($_GET['msg'])){
+            $msg = $_GET['msg'];
+            echo '<div class="alert alert-warning alert-dismissible fade show" role="alert">' . $msg . '
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>';
+        }
+        ?>
+       
 </form>
 
+        <a href="mutual_funds.php" class="btn btn-success">Add New</a>
+    </div><br>
+    <form method="GET" action="">
+    <input type="text" name="search" placeholder="Search...">
+    <button type="submit" class="btn btn-primary">Search</button><br>
+    <table id="dataTable" class="table table-hover text-center">
+        <tr>
+            <th>Fund ID</th>
+            <th>Fund Name</th>
+            <th>Fund Manager</th>
+            <th>Expenses ratio</th>
+            <th>Nav</th>
+            <th>Holdings</th>
+            <th>Actions</th>
+        </tr>
+        <?php
+        
 
 
-
-</div>
-    </div>
-    
-    
-    
-    <script>
-        function confirmInsert() {
-        return confirm('Are you sure you want to insert this record?');
+        // Output data of each row
+        if ($result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                echo "<tr>";
+                echo "<td>" . $row["Fund_id"] . "</td>";
+                echo "<td>" . $row["Fund_name"] . "</td>";
+                echo "<td>" . $row["Fund_name"] . "</td>";
+                echo "<td>" . $row["Expenses_ratio"] . "</td>";
+                echo "<td>" . $row["Nav"] . "</td>";
+                echo "<td>" . $row["Holdings"] . "</td>";
+                echo "<td>";
+                echo "<a href='fundupdate.php?updateFund_id=" . $row['Fund_id'] . "'>Update</a> | ";
+                echo "<a href='funddelete.php?Fund_id=" . $row['Fund_id'] . "'>Delete</a>";
+                 echo "</td>";
+                echo "</tr>";
+            }
+        } else {
+            echo "<tr><td colspan='7'>No data found</td></tr>";
         }
-        </script>
+        ?>
+    </table>
+
 </body>
 
 </html>
+
+<?php
+// Close connection at the end of the file
+$conn->close();
+?>
+

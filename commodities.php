@@ -133,28 +133,28 @@ sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossor
             <div class="header--title">
                 <h2>Investment Portfolio Tracker</h2>
                 
-                <li><a href="Portofolios.php">Portofolio</a></li>
-                <li><a href="investment.php">Investment</a></li>
-                <li><a href="transaction.php">Transaction</a></li>
-                <li><a href="performance.php">Performance</a></li>
-                <li><a href="stock.php">Stock</a></li>
-                <li><a href="bond.php">Bonds</a></li>
-                <li><a href="mutual_funds.php">Mutual funds</a></li>
-                <li><a href="real_estate_investment.php">Real Estate Investment</a></li>
-                <li><a href="option_contract.php">Option Contract</a></li>
-                <li><a href="commodities.php">Commodities</a></li>
-                <li><a href="portofolio_allocation.php">Portofolio Allocations</a></li>
+                <li><a href="portofolio_read_insert.php">Portofolio</a></li>
+                <li><a href="investment_read_insert.php">Investment</a></li>
+                <li><a href="transaction_read_insert.php">Transaction</a></li>
+                <li><a href="performance_read_insert.php">Performance</a></li>
+                <li><a href="stock_read_insert.php">Stock</a></li>
+                <li><a href="bond_read_insert.php">Bonds</a></li>
+                <li><a href="funds_read_insert.php">Mutual funds</a></li>
+                <li><a href="Realestate_read_insert.php">Real Estate Investment</a></li>
+                <li><a href="optioncontract_read_insert.php">Option Contract</a></li>
+                <li><a href="commodities_read_insert.php">Commodities</a></li>
+                <li><a href="portofolioallocation_read_insert.php">Portofolio Allocations</a></li>
             </div>
         </div>
 
         <div class="container">
         <h2>Commodity</h2>
-        <form action="commodities.php" method="post">
+        <form action="commodities_read_insert.php" method="post">
     <label for="commodity_name">Commodity Name:</label>
     <input type="text" id="commodity_name" name="commodity_name" required>
 
     <label for="price">Price:</label>
-    <input type="number" id="price" name="price" step="0.01" required>
+    <input type="text" id="price" name="price" step="0.01" required>
 
     <label for="supply_demand_dynamics">Supply-Demand Dynamics:</label>
     <textarea id="supply_demand_dynamics" name="supply_demand_dynamics" rows="4" cols="50" required></textarea>
